@@ -1,0 +1,16 @@
+
+What is this?
+-------------
+This is a prerelease candidate of the NOVA microhypervisor. This code is
+experimental and not feature complete. If it breaks you get to keep both
+pieces.
+
+Building NOVA
+-------------
+cd build; make
+
+Using NOVA
+----------
+See http://os.inf.tu-dresden.de/local/wiki/Nova
+
+Feedback should be sent to <udo@hypervisor.org>.
