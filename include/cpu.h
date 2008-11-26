@@ -1,5 +1,5 @@
 /*
- * Central Processing Unit (CPU)  
+ * Central Processing Unit (CPU)
  *
  * Copyright (C) 2005-2008, Udo Steinberg <udo@hypervisor.org>
  *
@@ -20,6 +20,22 @@
 #include "compiler.h"
 #include "types.h"
 #include "vectors.h"
+
+#define REGISTER_SETTER(reg)                                    \
+    ALWAYS_INLINE                                               \
+    static inline void set_ ## reg (mword v)                    \
+    {                                                           \
+        asm volatile ("mov %0, %%" #reg :: "r" (v));            \
+    }
+
+#define REGISTER_GETTER(reg)                                    \
+    ALWAYS_INLINE                                               \
+    static inline mword get_ ## reg ()                          \
+    {                                                           \
+        mword v;                                                \
+        asm volatile ("mov %%" #reg ", %0" : "=r" (v));         \
+        return v;                                               \
+    }
 
 class Cpu
 {
@@ -135,6 +151,11 @@ class Cpu
 
         enum
         {
+            DR7_EMPTY   = 0x400,
+        };
+
+        enum
+        {
             EFL_CF      = 1ul << 0,             // 0x1
             EFL_PF      = 1ul << 2,             // 0x4
             EFL_AF      = 1ul << 4,             // 0x10
@@ -238,33 +259,24 @@ class Cpu
             asm volatile ("cpuid" : "=a" (eax), "=b" (ebx), "=c" (ecx), "=d" (edx) : "a" (leaf), "c" (subleaf));
         }
 
-        ALWAYS_INLINE
-        static inline mword get_cr0()
-        {
-            mword cr0;
-            asm volatile ("mov %%cr0, %0" : "=r" (cr0));
-            return cr0;
-        }
+        REGISTER_GETTER(cr0)
+        REGISTER_SETTER(cr0)
+        REGISTER_GETTER(cr4)
+        REGISTER_SETTER(cr4)
 
-        ALWAYS_INLINE
-        static inline void set_cr0 (mword cr0)
-        {
-            asm volatile ("mov %0, %%cr0" : : "r" (cr0));
-        }
+        REGISTER_GETTER(dr0)
+        REGISTER_GETTER(dr1)
+        REGISTER_GETTER(dr2)
+        REGISTER_GETTER(dr3)
+        REGISTER_GETTER(dr6)
+        REGISTER_GETTER(dr7)
 
-        ALWAYS_INLINE
-        static inline mword get_cr4()
-        {
-            mword cr4;
-            asm volatile ("mov %%cr4, %0" : "=r" (cr4));
-            return cr4;
-        }
-
-        ALWAYS_INLINE
-        static inline void set_cr4 (mword cr4)
-        {
-            asm volatile ("mov %0, %%cr4" : : "r" (cr4));
-        }
+        REGISTER_SETTER(dr0)
+        REGISTER_SETTER(dr1)
+        REGISTER_SETTER(dr2)
+        REGISTER_SETTER(dr3)
+        REGISTER_SETTER(dr6)
+        REGISTER_SETTER(dr7)
 
         ALWAYS_INLINE
         static inline void flush_cache()
