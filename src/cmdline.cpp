@@ -64,7 +64,7 @@ void Cmdline::init (char *line)
     char *arg;
 
     while ((arg = get_arg (&line)))
-        for (param *p = params; p < params + sizeof params / sizeof *params; p++)
-            if (!strcmp (static_cast<char *>(phys_ptr (p->string)), arg))
-                *static_cast<bool *>(phys_ptr (p->param)) = true;
+        for (unsigned i = 0; i < (sizeof(params) / sizeof(struct param)); i++) 
+            if (!strcmp (params[i].string, arg))
+                *static_cast<bool *>(params[i].param) = true;
 }
