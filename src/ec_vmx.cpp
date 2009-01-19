@@ -113,7 +113,7 @@ void Ec::vmx_handler()
 
 void Ec::ret_user_vmresume()
 {
-    Gdt::unbusy_tss();
+    Gdt::gdt[SEL_TSS_RUN >> 3].unbusy_tss();
 
     current->vmcs->make_current();
 

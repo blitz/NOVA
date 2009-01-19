@@ -47,8 +47,14 @@ class Gdt : public Descriptor
         }
 
         ALWAYS_INLINE
-        static inline void unbusy_tss()
+        inline void unbusy_tss()
         {
-            gdt[SEL_TSS_RUN >> 3].hi &= ~0x200;
+          hi &= ~0x200;
+        }
+
+        ALWAYS_INLINE
+        inline bool tss_busy()
+        {
+          return (hi & 0x200) != 0;
         }
 };
