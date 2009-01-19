@@ -55,6 +55,10 @@ class Tss
         static Tss run ALIGNED(8) CPULOCAL;
         static Tss dbf ALIGNED(8) CPULOCAL;
 
+#ifdef NIXON
+        static Tss nmi ALIGNED(8) CPULOCAL;
+        static Tss dbg ALIGNED(8) CPULOCAL;
+#endif
         static void build();
 
         ALWAYS_INLINE

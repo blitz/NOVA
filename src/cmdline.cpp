@@ -17,6 +17,7 @@
 
 #include "cmdline.h"
 #include "string.h"
+#include "stdio.h"
 
 bool Cmdline::noacpi;
 bool Cmdline::noapic;
@@ -25,6 +26,7 @@ bool Cmdline::nomp;
 bool Cmdline::noserial;
 bool Cmdline::nospinner;
 bool Cmdline::novga;
+bool Cmdline::wait;
 
 struct param
 {
@@ -39,6 +41,7 @@ struct param
     { "noserial",   &Cmdline::noserial  },
     { "nospinner",  &Cmdline::nospinner },
     { "novga",      &Cmdline::novga     },
+    { "wait",       &Cmdline::wait      },
 };
 
 char *Cmdline::get_arg (char **line)

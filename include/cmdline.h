@@ -34,6 +34,7 @@ class Cmdline
         static bool noserial;
         static bool nospinner;
         static bool novga;
+        static bool wait;
 
         ALWAYS_INLINE
         static inline void *phys_ptr (void const *ptr)

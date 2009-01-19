@@ -25,13 +25,18 @@
 #include "idt.h"
 #include "keyb.h"
 #include "memory.h"
+#include "nmi.h"
 #include "pic.h"
 #include "ptab.h"
 #include "ptab_boot.h"
 #include "stdio.h"
 #include "types.h"
 
+#ifdef NIXON
 char const *version = "NOVA 0.0.1";
+#else
+char const *version = "NOVA 0.0.1 (+ Nixon support)";
+#endif
 
 extern "C" INIT
 mword kern_ptab_setup()
@@ -45,12 +50,23 @@ mword kern_ptab_setup()
                                 Ptab::ATTR_GLOBAL |
                                 Ptab::ATTR_WRITABLE));
 
-    ptab->map (KSTCK_SADDR, 
+    // Kernel stack
+    ptab->map (KSTCK_SADDR,
                Buddy::ptr_to_phys (Buddy::allocator.alloc (0, Buddy::FILL_0)),
                KSTCK_EADDR - KSTCK_SADDR,
                Ptab::Attribute (Ptab::ATTR_NOEXEC |
                                 Ptab::ATTR_GLOBAL |
                                 Ptab::ATTR_WRITABLE));
+
+#ifdef NIXON
+    // NMI handler stack
+    ptab->map (NMISTCK_SADDR,
+               Buddy::ptr_to_phys (Buddy::allocator.alloc (0, Buddy::FILL_0)),
+               NMISTCK_EADDR - NMISTCK_SADDR,
+               Ptab::Attribute (Ptab::ATTR_NOEXEC |
+                                Ptab::ATTR_GLOBAL |
+                                Ptab::ATTR_WRITABLE));
+#endif
 
     ptab->sync_master_range (LINK_ADDR, LOCAL_SADDR);
 

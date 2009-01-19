@@ -45,6 +45,12 @@
 #endif
 #define LOCAL_EADDR     0xd0000000
 
+#ifdef NIXON
+/* NMI Stack */
+#define NMISTCK_SADDR   0xcfffb000
+#define NMISTCK_EADDR   NMISTCK_SADDR + PAGE_SIZE
+#endif
+
 /* Local APIC */
 #define LAPIC_SADDR     0xcfffc000
 #define LAPIC_EADDR     LAPIC_SADDR + PAGE_SIZE

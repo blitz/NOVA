@@ -174,6 +174,11 @@ class Ec
         NORETURN
         static void task_gate_handler() asm ("task_gate_handler");
 
+#ifdef NIXON
+        NORETURN
+        static void nmi_handler() asm ("nmi_handler");
+#endif
+
         static void pf_handler (Exc_regs *);
 
         NORETURN

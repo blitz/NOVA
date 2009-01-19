@@ -24,4 +24,11 @@
 #define SEL_USER_DATA   0x23
 #define SEL_TSS_RUN     0x28
 #define SEL_TSS_DBF     0x30
+
+#ifdef NIXON
+#define SEL_TSS_NMI     0x38
+#define SEL_TSS_DBG     0x40
+#define SEL_MAX         0x48
+#else
 #define SEL_MAX         0x38
+#endif

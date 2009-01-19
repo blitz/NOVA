@@ -17,12 +17,15 @@
 
 #include "acpi.h"
 #include "compiler.h"
+#include "cmdline.h"
 #include "cpu.h"
 #include "ec.h"
 #include "extern.h"
 #include "hip.h"
+#include "nmi.h"
 #include "pd.h"
 #include "sc.h"
+#include "stdio.h"
 
 extern "C" NORETURN
 void bootstrap()
@@ -44,6 +47,19 @@ void bootstrap()
     // Create idle EC
     Ec::current = new Ec (&Pd::kern, Ec::idle);
     Sc::current = new Sc (Ec::current, 0, Sc::default_quantum);
+
+#ifdef NIXON
+    if (Cpu::bsp) {
+      // Since we have no multi-processor support in Nixon, only
+      // wait on the BSP.
+      trace(TRACE_CPU, "Debugger can now be attached.");
+      nmi_command_space.magic = NIXON_MAGIC_VALUE;
+      if (Cmdline::wait) {
+        trace(TRACE_CPU, "Waiting...");
+        NIXON_WAIT_DEBUGGER_ATTACH;
+      }
+    }
+#endif
 
     Sc::schedule();
 }

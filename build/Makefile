@@ -43,14 +43,14 @@ endif
 check = $(shell if $(CC) $(1) -S -xc++ /dev/null -o /dev/null >/dev/null 2>&1; then echo "$(1)"; fi)
 
 # Preprocessor options
-DEFINES		:=
+DEFINES		:= NIXON
 VPATH		:= $(SRC_DIR)
 PFLAGS		:= $(addprefix -D, $(DEFINES)) $(addprefix -I, $(INC_DIR))
 
 # Optimization options
 AFLAGS          := -march=i686 -mpreferred-stack-boundary=2 -mregparm=3
 DFLAGS          := -MP -MMD -pipe
-OFLAGS          := -Os
+OFLAGS          := -g -Os
 
 # Language options
 FFLAGS          := -fdata-sections -ffunction-sections -fomit-frame-pointer -freg-struct-return -freorder-blocks -funit-at-a-time

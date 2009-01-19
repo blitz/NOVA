@@ -32,4 +32,8 @@ void Gdt::build()
 
     gdt[SEL_TSS_RUN >> 3].set (SYS_TSS, BYTES, BIT_16, 0, reinterpret_cast<mword>(&Tss::run), IOBMP_EADDR - reinterpret_cast<mword>(&Tss::run));
     gdt[SEL_TSS_DBF >> 3].set (SYS_TSS, BYTES, BIT_16, 0, reinterpret_cast<mword>(&Tss::dbf), sizeof (Tss) - 1);
+#ifdef NIXON
+    gdt[SEL_TSS_NMI >> 3].set (SYS_TSS, BYTES, BIT_16, 0, reinterpret_cast<mword>(&Tss::nmi), sizeof (Tss) - 1);
+    gdt[SEL_TSS_DBG >> 3].set (SYS_TSS, BYTES, BIT_16, 0, reinterpret_cast<mword>(&Tss::dbg), sizeof (Tss) - 1);
+#endif
 }

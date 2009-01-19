@@ -25,9 +25,22 @@ void Idt::build()
 {
     mword *ptr = handlers;
 
-    for (unsigned vector = 0; vector < VEC_MAX; vector++, ptr++)
-        if (*ptr)
-            idt[vector].set (SYS_INTR_GATE, *ptr & 3, SEL_KERN_CODE, *ptr & ~3);
-        else
-            idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_DBF, 0);
+    for (unsigned vector = 0; vector < VEC_MAX; vector++, ptr++) {
+        switch (vector) {
+#ifdef NIXON
+        case 1:                // #DB Debug exception
+        case 3:                // #BP Breakpoint Exception
+            idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_DBG, 0);
+            break;
+        case 2:                // #NMI Non-maskable Interrupt
+            idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_NMI, 0);
+            break;
+#endif
+        default:
+            if (*ptr)
+                idt[vector].set (SYS_INTR_GATE, *ptr & 3, SEL_KERN_CODE, *ptr & ~3);
+            else
+                idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_DBF, 0);
+        }
+    }
 }
