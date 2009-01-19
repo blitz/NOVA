@@ -50,3 +50,21 @@ inline int strcmp (char const *s1, char const *s2)
 
     return *s1 - *s2;
 }
+
+extern "C" ALWAYS_INLINE NONNULL
+inline char *strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+    char *di;
+
+    for (i = 0, di = dest; i<n; i++) {
+        di[0] = src[0];
+        if (src[0] == 0)
+            break;
+
+        di++;
+        src++;
+    }
+
+    return dest;
+}

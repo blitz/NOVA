@@ -15,6 +15,7 @@
  * GNU General Public License version 2 for more details.
  */
 
+#include "cmdline.h"
 #include "cpu.h"
 #include "extern.h"
 #include "hip.h"
@@ -49,6 +50,15 @@ void Hip::build (mword addr)
     uint32 mmap_len    = mbi->mmap_len;
     uint32 mods_addr   = mbi->mods_addr;
     uint32 mods_count  = mbi->mods_count;
+
+    // Parse our own command line.
+    if (mbi->flags & Multiboot::CMDLINE) {
+      char cmdline_buf[128];
+      char *mbi_cmdline = static_cast<char *>(Ptab::master()->remap(mbi->cmdline));
+
+      strncpy(cmdline_buf, mbi_cmdline, sizeof (cmdline_buf));
+      Cmdline::init(cmdline_buf);
+    }
 
     Hip_mem *mem = hip->mem_desc;
 
