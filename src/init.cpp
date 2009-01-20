@@ -32,7 +32,7 @@
 #include "stdio.h"
 #include "types.h"
 
-#ifdef NIXON
+#ifndef NIXON
 char const *version = "NOVA 0.0.1";
 #else
 char const *version = "NOVA 0.0.1 (+ Nixon support)";
