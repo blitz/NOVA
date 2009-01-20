@@ -24,8 +24,8 @@ SIZE		:= size
 
 SRC_DIR		:= ../src
 INC_DIR		:= ../include
-INS_DIR		?= /boot/tftp/nova
-TARGET		:= hypervisor
+INS_DIR		?= $(HOME)/src/diplom/code/tftp
+TARGET		:= nova
 
 SRC		:= hypervisor.ld $(wildcard $(SRC_DIR)/*.S) $(wildcard $(SRC_DIR)/*.cpp)
 OBJ		:= $(notdir \
@@ -50,7 +50,7 @@ PFLAGS		:= $(addprefix -D, $(DEFINES)) $(addprefix -I, $(INC_DIR))
 # Optimization options
 AFLAGS          := -march=i686 -mpreferred-stack-boundary=2 -mregparm=3
 DFLAGS          := -MP -MMD -pipe
-OFLAGS          := -g -Os
+OFLAGS          := -O1
 
 # Language options
 FFLAGS          := -fdata-sections -ffunction-sections -fomit-frame-pointer -freg-struct-return -freorder-blocks -funit-at-a-time
@@ -67,9 +67,12 @@ WFLAGS		+= $(call check,-Wstrict-null-sentinel)
 WFLAGS		+= $(call check,-Wstrict-overflow=5)
 WFLAGS		+= $(call check,-Wvolatile-register-var)
 
+# Debugging options
+DBGFLAGS        := -g
+
 # Compiler flags
-SFLAGS		:= $(PFLAGS) $(DFLAGS)
-CFLAGS		:= $(PFLAGS) $(DFLAGS) $(OFLAGS) $(AFLAGS) $(FFLAGS) $(WFLAGS)
+SFLAGS		:= $(PFLAGS) $(DFLAGS) $(DBGFLAGS)
+CFLAGS		:= $(PFLAGS) $(DFLAGS) $(DBGFLAGS) $(OFLAGS) $(AFLAGS) $(FFLAGS) $(WFLAGS)
 
 # Linker flags
 LFLAGS		:= --gc-sections --warn-common -static -n -T
@@ -97,7 +100,7 @@ $(TARGET):	$(OBJ)
 
 install:        $(TARGET)
 		$(call message,INS,$@)
-		$(INSTALL) -s -m 644 $(TARGET) $(INS_DIR)
+		$(INSTALL) -m 644 $(TARGET) $(INS_DIR)
 		@$(SIZE) $<
 
 clean:
