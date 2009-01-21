@@ -53,7 +53,13 @@ class Gdt : public Descriptor
         }
 
         ALWAYS_INLINE
-        inline bool tss_busy()
+        inline void busy_tss()
+        {
+          hi |= 0x200;
+        }
+
+        ALWAYS_INLINE
+        inline bool is_tss_busy()
         {
           return (hi & 0x200) != 0;
         }

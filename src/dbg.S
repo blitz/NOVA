@@ -11,7 +11,7 @@
 #ifdef NIXON
 
         /* AT&T syntax is for compilers, so use GAS' crappy emulation
-	of MASM/TASM. */
+        of MASM/TASM. */
         .intel_syntax noprefix
 
         .text
@@ -19,10 +19,15 @@
 
 dbg_handler:
         /* nmi_command_space.inside_dbg */
-        mov [dword ptr nmi_command_space + 6*4], 1
+
+        /* We are corrupting the checksum by writing here. Since we
+           cannot update the counter and the checksum atomically, we
+           rely on Nixon to watch out for this. */
+
+        mov [dword ptr nmi_command_space + 1*4], 1
 
         /* We can use hlt even though IF is disabled, since we have to
-	   be woken up by a #NMI anyway which forces us out of this
+           be woken up by a #NMI anyway which forces us out of this
            loop. */
 1:      hlt
         jmp 1b

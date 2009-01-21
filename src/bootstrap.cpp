@@ -50,14 +50,15 @@ void bootstrap()
 
 #ifdef NIXON
     if (Cpu::bsp) {
-      // Since we have no multi-processor support in Nixon, only
-      // wait on the BSP.
-      trace(TRACE_CPU, "Debugger can now be attached.");
-      nmi_command_space.magic = NIXON_MAGIC_VALUE;
-      if (Cmdline::wait) {
-        trace(TRACE_CPU, "Waiting...");
-        NIXON_WAIT_DEBUGGER_ATTACH;
-      }
+        // Since we have no multi-processor support in Nixon, only
+        // wait on the BSP.
+        trace(TRACE_CPU, "Debugger can now be attached.");
+        nmi_setup();
+        
+        if (Cmdline::wait) {
+            trace(TRACE_CPU, "Waiting...");
+            NIXON_WAIT_DEBUGGER_ATTACH;
+        }
     }
 #endif
 
