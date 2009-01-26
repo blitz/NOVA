@@ -136,9 +136,6 @@ void Ec::nmi_handler()
         assert(nmi_checksum() == 0);
         assert(nmi_command_space.inside_dbg == 0);
 
-        // We completed all our tasks.
-        asm volatile ("" ::: "memory");
-
         // We need to return via iret to tell the processor's NMI handling
         // circuits that we handled the NMI. The problem is that iret
         // stores a new EIP in our TSS which points after the iret
