@@ -30,7 +30,10 @@ void Idt::build()
 #ifdef NIXON
         case 1:                // #DB Debug exception
         case 3:                // #BP Breakpoint Exception
-            idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_DBG, 0);
+            // DPL is checked at INTx, INT3, and INTO
+            // instructions. Set it to 3 to allow soft breakpoints in
+            // user code.
+            idt[vector].set (SYS_TASK_GATE, 3, SEL_TSS_DBG, 0);
             break;
         case 2:                // #NMI Non-maskable Interrupt
             idt[vector].set (SYS_TASK_GATE, 0, SEL_TSS_NMI, 0);
