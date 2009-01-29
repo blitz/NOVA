@@ -130,6 +130,8 @@ void Ec::nmi_handler()
         cs->command  = 0;
         cs->checksum = 0;
         cs->checksum = ~nmi_checksum();
+        // Make sure the counter becomes visible last.
+        Cpu::store_fence();
         cs->counter++;
 
         // Verify checksum.

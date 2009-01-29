@@ -278,6 +278,13 @@ class Cpu
         REGISTER_SETTER(dr6)
         REGISTER_SETTER(dr7)
 
+        
+        ALWAYS_INLINE
+        static inline void store_fence()
+        {
+            asm volatile ("sfence" : : : "memory");
+        }
+        
         ALWAYS_INLINE
         static inline void flush_cache()
         {
