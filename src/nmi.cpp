@@ -18,13 +18,6 @@
 
 struct nmi_command_space nmi_command_space;
 
-void nmi_setup()
-{
-    memset(&nmi_command_space, 0, sizeof(struct nmi_command_space));
-    nmi_command_space.checksum = 1 + ~NIXON_MAGIC_VALUE;
-    nmi_command_space.magic = NIXON_MAGIC_VALUE;
-}
-
 // Calculates the checksum of the nmi_command_space. Should be zero.
 static uint32 nmi_checksum()
 {
@@ -35,6 +28,16 @@ static uint32 nmi_checksum()
     }
 
     return sum;
+}
+
+void nmi_setup()
+{
+    memset(&nmi_command_space, 0, sizeof(struct nmi_command_space));
+    nmi_command_space.checksum = nmi_checksum() - NIXON_MAGIC_VALUE;
+    
+    // Make sure the magic value becomes visible last.
+    Cpu::store_fence();
+    nmi_command_space.magic = NIXON_MAGIC_VALUE;
 }
 
 static inline void
@@ -94,6 +97,7 @@ void Ec::nmi_handler()
         // the host.
         cs->cr3 = Tss::run.cr3;
         cs->cr4 = Cpu::get_cr4();
+        cs->tss_location = reinterpret_cast<uint32>(&Tss::run);
 
         // Set status flags.
         cs->status = 0;

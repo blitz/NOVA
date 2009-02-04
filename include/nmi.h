@@ -37,7 +37,7 @@ enum nmi_status {
 
 struct nmi_command_space {
   union {
-    volatile uint32 word[14];
+    volatile uint32 word[15];
     struct {
       // We fill in this magic value, when we are ready to be debugged.
       volatile uint32 magic;
@@ -58,9 +58,10 @@ struct nmi_command_space {
       // A bit field to report status back to Nixon.
       volatile uint32 status;
 
-      // Kernel page table and CR4. Set on first NMI.
+      // Kernel page table, CR4 and TSS location.
       volatile uint32 cr3;
       volatile uint32 cr4;
+      volatile uint32 tss_location;
 
       // Copies of the debug registers.
       volatile uint32 dr0;
