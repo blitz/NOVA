@@ -37,31 +37,50 @@ enum nmi_status {
 
 struct nmi_command_space {
   union {
-    volatile uint32 word[15];
     struct {
       // We fill in this magic value, when we are ready to be debugged.
       volatile uint32 magic;
 
-      // If the NMI handler detects that a debug exception has occured,
-      // this is set. This is already set in dbg_handler, so Nixon may
-      // poll this memory address instead of sending NMIs to check.
-      // XXX This is referenced in dbg.S by offset. So this must be
-      // the second field!
+      /// Fields that are written only by the stub.
+
+      // If the NMI handler detects that a debug exception has occured
+      // this is set to 1. The monitor has to poll this value and send
+      // an interrupt when this happens.  XXX This is referenced in
+      // dbg.S by offset. So this must be the second field!
       volatile uint32 inside_dbg;
 
-      // A counter that Nixon can poll on.
+      // A counter that the monitor can poll on.
       volatile uint32 counter;
+
+      // A bit field to report status back to the monitor.
+      volatile uint32 status;
+
+      // Current page table, CR4 and TSS location.
+      volatile uint32 cr3;
+      volatile uint32 cr4;
+      volatile uint32 tss_location; // This is an absolute physical address.
+
+      /// Static fields. These are set by the stub and should not be changed.
+
+      // A window of physical memory (sizes are in bytes). Set by the
+      // stub. The monitor interprets all memory references (except
+      // the TSS location) as relative to this window. If both values
+      // are 0, don't offset memory addresses.
+      volatile uint32 phys_offset;
+      volatile uint32 phys_size;
+
+      // The type of MSI sent by the monitor. See section 9.11.2
+      // "Message Data register format" for the complete
+      // explanation. The special value 0 means that the monitor
+      // should use NMIs. Using other values is untested.
+      volatile uint32 int_vec;
+
+      /// Fields that are written only by the monitor.
 
       // A bit field to tell the NMI handler what to do.
       volatile uint32 command;
 
-      // A bit field to report status back to Nixon.
-      volatile uint32 status;
-
-      // Kernel page table, CR4 and TSS location.
-      volatile uint32 cr3;
-      volatile uint32 cr4;
-      volatile uint32 tss_location;
+      /// The following fields are written by both the stub and the monitor.
 
       // Copies of the debug registers.
       volatile uint32 dr0;
@@ -75,6 +94,7 @@ struct nmi_command_space {
       // 0. This can also be 1 in some circumstances. See dbg.S.
       volatile uint32 checksum;
     };
+    volatile uint32 word[18];
   };
 };
 

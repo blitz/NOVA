@@ -40,7 +40,7 @@ void nmi_setup()
     nmi_command_space.magic = NIXON_MAGIC_VALUE;
 }
 
-static inline void
+static void
 save_debug_registers(void)
 {
     nmi_command_space.dr0 = Cpu::get_dr0();
