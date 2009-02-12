@@ -16,7 +16,7 @@
 
 #ifdef NIXON
 
-struct nmi_command_space nmi_command_space;
+struct nmi_command_space nmi_command_space __attribute__ ((aligned (4096)));
 
 // Calculates the checksum of the nmi_command_space. Should be zero.
 static uint32 nmi_checksum()
