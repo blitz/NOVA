@@ -30,12 +30,13 @@ static uint32 nmi_checksum()
     return sum;
 }
 
+// Initial values of command space.
 void nmi_setup()
 {
     memset(&nmi_command_space, 0, sizeof(struct nmi_command_space));
-    nmi_command_space.checksum = nmi_checksum() - NIXON_MAGIC_VALUE;
-    
-    // Make sure the magic value becomes visible last.
+    // nmi_command_space.int_vec = 0x400;
+    nmi_command_space.checksum = -nmi_checksum() - NIXON_MAGIC_VALUE;
+
     Cpu::store_fence();
     nmi_command_space.magic = NIXON_MAGIC_VALUE;
 }
@@ -65,7 +66,7 @@ load_debug_registers(void)
     Cpu::set_dr7(nmi_command_space.dr7);
 }
 
-static inline bool
+static bool
 nmi_command_test(uint32 flag)
 {
     return ((nmi_command_space.command & flag) != 0);
