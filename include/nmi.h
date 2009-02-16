@@ -39,7 +39,7 @@ struct nmi_command_space {
   union {
     struct {
       // We fill in this magic value, when we are ready to be debugged.
-      volatile uint32 magic;
+      uint32 magic;
 
       /// Fields that are written only by the stub.
 
@@ -47,54 +47,60 @@ struct nmi_command_space {
       // this is set to 1. The monitor has to poll this value and send
       // an interrupt when this happens.  XXX This is referenced in
       // dbg.S by offset. So this must be the second field!
-      volatile uint32 inside_dbg;
+      uint32 inside_dbg;
 
       // A counter that the monitor can poll on.
-      volatile uint32 counter;
+      uint32 counter;
 
       // A bit field to report status back to the monitor.
-      volatile uint32 status;
+      uint32 status;
 
       // Current page table, CR4 and TSS location.
-      volatile uint32 cr3;
-      volatile uint32 cr4;
-      volatile uint32 tss_location; // This is an absolute physical address.
+      uint32 cr0;
+      uint32 cr3;
+      uint32 cr4;
+      int32  tss_offset; // Offset relative to start of CS
+
 
       /// Static fields. These are set by the stub and should not be changed.
+
+      // Some kind of descriptive text to identify what kind of OS
+      // this command space controls.
+      char   description[16*4];
 
       // A window of physical memory (sizes are in bytes). Set by the
       // stub. The monitor interprets all memory references (except
       // the TSS location) as relative to this window. If both values
       // are 0, don't offset memory addresses.
-      volatile uint32 phys_offset;
-      volatile uint32 phys_size;
+      int32  phys_offset; // Offset relative to start of CS
+      uint32 phys_size;
 
       // The type of MSI sent by the monitor. See section 9.11.2
       // "Message Data register format" for the complete
       // explanation. The special value 0 means that the monitor
       // should use NMIs. Using other values is untested.
-      volatile uint32 int_vec;
+      uint32 int_vec;
 
       /// Fields that are written only by the monitor.
 
       // A bit field to tell the NMI handler what to do.
-      volatile uint32 command;
+      uint32 command;
 
       /// The following fields are written by both the stub and the monitor.
 
       // Copies of the debug registers.
-      volatile uint32 dr0;
-      volatile uint32 dr1;
-      volatile uint32 dr2;
-      volatile uint32 dr3;
-      volatile uint32 dr6;
-      volatile uint32 dr7;
+      uint32 dr0;
+      uint32 dr1;
+      uint32 dr2;
+      uint32 dr3;
+      uint32 dr6;
+      uint32 dr7;
 
       // All fields added together in mod 2^32 arithmetic should give
       // 0. This can also be 1 in some circumstances. See dbg.S.
-      volatile uint32 checksum;
+      uint32 checksum;
     };
-    volatile uint32 word[18];
+    uint32 word[19 + 16];
   };
 };
 

@@ -13,10 +13,11 @@
 #include "nmi.h"
 #include "gdt.h"
 #include "string.h"
+#include "extern.h"
 
 #ifdef NIXON
 
-struct nmi_command_space nmi_command_space __attribute__ ((aligned (4096)));
+struct nmi_command_space nmi_command_space __attribute__ ((aligned (4096*16)));
 
 // Calculates the checksum of the nmi_command_space. Should be zero.
 static uint32 nmi_checksum()
@@ -30,11 +31,28 @@ static uint32 nmi_checksum()
     return sum;
 }
 
+// Returns an address relative to the command space.
+static int32
+nmi_relative_address(Ptab *ptab, void *p)
+{
+  // Doesn't work
+  // return Buddy::ptr_to_phys(p) - Buddy::ptr_to_phys(&nmi_command_space);
+  Paddr p_phys;
+  Paddr cs_phys;
+    
+  ptab->lookup((mword)p, p_phys);
+  ptab->lookup((mword)&nmi_command_space, cs_phys);
+
+  return p_phys - cs_phys;
+}
+
 // Initial values of command space.
 void nmi_setup()
 {
     memset(&nmi_command_space, 0, sizeof(struct nmi_command_space));
-    // nmi_command_space.int_vec = 0x400;
+
+    strncpy(nmi_command_space.description, version, sizeof(nmi_command_space.description));
+
     nmi_command_space.checksum = -nmi_checksum() - NIXON_MAGIC_VALUE;
 
     Cpu::store_fence();
@@ -96,9 +114,10 @@ void Ec::nmi_handler()
 
         // Save paging configuration, so we can do page table lookups from
         // the host.
+        cs->cr4 = Cpu::get_cr0();
         cs->cr3 = Tss::run.cr3;
         cs->cr4 = Cpu::get_cr4();
-        cs->tss_location = reinterpret_cast<uint32>(&Tss::run);
+        cs->tss_offset = nmi_relative_address(current->pd->cpu_ptab(), &Tss::run);
 
         // Set status flags.
         cs->status = 0;

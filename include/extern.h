@@ -36,3 +36,5 @@ extern uint64 PDP, PDE, PTE;
 extern char entry_sysenter;
 extern char entry_vmexit;
 extern mword handlers[];
+
+extern char const *version;
