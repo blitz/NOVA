@@ -54,7 +54,7 @@ void bootstrap()
         // wait on the BSP.
         trace(TRACE_CPU, "Debugger can now be attached.");
         nmi_setup();
-        
+
         if (Cmdline::wait) {
             trace(TRACE_CPU, "Waiting...");
             NIXON_WAIT_DEBUGGER_ATTACH;

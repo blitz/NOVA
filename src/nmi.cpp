@@ -39,7 +39,7 @@ nmi_relative_address(Ptab *ptab, void *p)
   // return Buddy::ptr_to_phys(p) - Buddy::ptr_to_phys(&nmi_command_space);
   Paddr p_phys;
   Paddr cs_phys;
-    
+
   ptab->lookup((mword)p, p_phys);
   ptab->lookup((mword)&nmi_command_space, cs_phys);
 
