@@ -59,8 +59,7 @@ struct nmi_command_space {
       uint32 cr0;
       uint32 cr3;
       uint32 cr4;
-      int32  tss_offset; // Offset relative to start of CS
-
+      int32  tss_va;
 
       /// Static fields. These are set by the stub and should not be changed.
 

@@ -114,10 +114,10 @@ void Ec::nmi_handler()
 
         // Save paging configuration, so we can do page table lookups from
         // the host.
-        cs->cr4 = Cpu::get_cr0();
+        cs->cr0 = Cpu::get_cr0();
         cs->cr3 = Tss::run.cr3;
         cs->cr4 = Cpu::get_cr4();
-        cs->tss_offset = nmi_relative_address(current->pd->cpu_ptab(), &Tss::run);
+        cs->tss_va = (uint32)&Tss::run;
 
         // Set status flags.
         cs->status = 0;
