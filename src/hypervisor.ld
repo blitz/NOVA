@@ -71,6 +71,10 @@ SECTIONS
         *(.bss .bss.* .gnu.linkonce.b.*)
 
         . = ALIGN(4K);
+        _cheatspace = .;
+        . += 4K;
+
+        . = ALIGN(4K);
         _mempool_l = .; PROVIDE (_mempool_p = _mempool_l - OFFSET);
 
         PROVIDE (PAGE_0 = .); PROVIDE (FRAME_0 = PAGE_0 - OFFSET);

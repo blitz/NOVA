@@ -30,5 +30,8 @@
 #define SEL_TSS_DBG     0x40
 #define SEL_MAX         0x48
 #else
-#define SEL_MAX         0x38
+#define SEL_UNUSED1     0x38
+#define SEL_UNUSED2     0x40
+#define SEL_MAX         0x48
 #endif
+
