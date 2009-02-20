@@ -37,6 +37,12 @@ Slab_cache Ec::cache ("EC", sizeof (Ec), 8);
 // Current EC
 Ec *Ec::current;
 
+// XXX
+uint32 Ec::debug_xxx()
+{
+  return Buddy::ptr_to_phys(Ec::current->pd->cpu_ptab());
+}
+
 // Constructors
 Ec::Ec (Pd *p, void (*c)()) : continuation (c), utcb (0), pd (p), ref (0) {}
 

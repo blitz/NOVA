@@ -178,6 +178,7 @@ class Ec
         NORETURN
         static void nmi_handler() asm ("nmi_handler");
 #endif
+        uint32 debug_xxx() asm ("debug_xxx");
 
         static void pf_handler (Exc_regs *);
 
