@@ -98,6 +98,9 @@ $(TARGET):	$(OBJ)
 .PHONY:		clean
 .PHONY:		cleanall
 
+oz:		$(TARGET)
+		scp -p $(TARGET) oz:boot/
+
 install:        $(TARGET)
 		$(call message,INS,$@)
 		$(INSTALL) -m 644 $(TARGET) $(INS_DIR)
