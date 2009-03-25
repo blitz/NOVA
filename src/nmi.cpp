@@ -95,14 +95,14 @@ void Ec::nmi_handler()
         Tss::run.cr3 = cur_ptab;
 
         // Verify checksum.
-        assert(nmi_checksum() == 0);
+        //assert(nmi_checksum() == 0);
 
         // Save paging configuration, so we can do page table lookups from
         // the host.
         cs->cr0 = Cpu::get_cr0();
         cs->cr3 = Tss::run.cr3;
         cs->cr4 = Cpu::get_cr4();
-        cs->tss_va = (uint32)&Tss::run;
+        cs->tss_va = reinterpret_cast<uint32>(&Tss::run);
 
         // Set status flags.
         cs->status = 0;
@@ -119,7 +119,7 @@ void Ec::nmi_handler()
         Tss::dbg.link = SEL_TSS_RUN;
 
         // We cannot currently swap the real debug registers with our shadow copy.
-        assert(!(nmi_command_test(NIXON_DR_TO_CS) & nmi_command_test(NIXON_DR_FROM_CS)));
+        //assert(!(nmi_command_test(NIXON_DR_TO_CS) & nmi_command_test(NIXON_DR_FROM_CS)));
 
         if (nmi_command_test(NIXON_DR_TO_CS)) {
             save_debug_registers();
@@ -136,16 +136,17 @@ void Ec::nmi_handler()
 
         // Update command space checksum. The counter is incremented
         // after that, so that Nixon can poll on it.
-        cs->command  = 0;
+        // cs->command  = 0;
         cs->checksum = 0;
         cs->checksum = ~nmi_checksum();
         // Make sure the counter becomes visible last.
         Cpu::store_fence();
         cs->counter++;
+        Cpu::store_fence();
 
         // Verify checksum.
-        assert(nmi_checksum() == 0);
-        assert(nmi_command_space.inside_dbg == 0);
+        //assert(nmi_checksum() == 0);
+        //assert(nmi_command_space.inside_dbg == 0);
 
         // We need to return via iret to tell the processor's NMI handling
         // circuits that we handled the NMI. The problem is that iret
