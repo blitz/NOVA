@@ -69,24 +69,19 @@ load_debug_registers(void)
     Cpu::set_dr7(nmi_command_space.dr7);
 }
 
-static bool
-nmi_command_test(uint32 flag)
-{
-    return ((nmi_command_space.command & flag) != 0);
-}
-
 void Ec::nmi_handler()
 {
     while (1) {
         struct nmi_command_space *cs = &nmi_command_space;
-        bool verbose = nmi_command_test(NIXON_VERBOSE);
+        bool verbose = (cs->command & NIXON_VERBOSE) != 0;
 
         if (verbose) {
             printf ("NMI at CS:%#x EIP:%#lx SS:%#x ESP:%#lx\n",
-                    Tss::run.cs,
-                    Tss::run.eip,
-                    Tss::run.ss,
-                    Tss::run.esp);
+                    Tss::run.cs, Tss::run.eip, Tss::run.ss, Tss::run.esp);
+            printf(" commands: VERBOSE%s%s%s\n", 
+                   (cs->command & NIXON_DR_TO_CS) ? "DR_TO_CS " : "",
+                   (cs->command & NIXON_DR_FROM_CS) ? "DR_FROM_CS " : "",
+                   (cs->command & NIXON_STOP) ? "STOP" : "");
         }
 
         // Task switching does not save CR3 (and some other stuff). Try to
@@ -102,14 +97,17 @@ void Ec::nmi_handler()
         cs->cr0 = Cpu::get_cr0();
         cs->cr3 = Tss::run.cr3;
         cs->cr4 = Cpu::get_cr4();
+
+        // Include a pointer to the TSS. Store EIP in the command
+        // space as well to allow cheap profiling.
         cs->tss_va = reinterpret_cast<uint32>(&Tss::run);
+        cs->eip = Tss::run.eip;
 
         // Set status flags.
-        cs->status = 0;
         switch (Tss::nmi.link) {
-        case SEL_TSS_RUN: cs->status |= NIXON_RUN; break;
-        case SEL_TSS_DBG: cs->status |= NIXON_DBG; break;
-        default: cs->status |= NIXON_PANIC | NIXON_DBG; break;
+        case SEL_TSS_RUN: cs->status = NIXON_RUN; break;
+        case SEL_TSS_DBG: cs->status = NIXON_DBG; break;
+        default: cs->status = NIXON_PANIC | NIXON_DBG; break;
         }
 
         // Reset the debug exception task.
@@ -119,18 +117,18 @@ void Ec::nmi_handler()
         Tss::dbg.link = SEL_TSS_RUN;
 
         // We cannot currently swap the real debug registers with our shadow copy.
-        //assert(!(nmi_command_test(NIXON_DR_TO_CS) & nmi_command_test(NIXON_DR_FROM_CS)));
+        //assert(!(cs->command & NIXON_DR_TO_CS) && (cs->command & NIXON_DR_FROM_CS));
 
-        if (nmi_command_test(NIXON_DR_TO_CS)) {
+        if (cs->command & NIXON_DR_TO_CS) {
             save_debug_registers();
         }
 
-        if (nmi_command_test(NIXON_DR_FROM_CS)) {
+        if (cs->command & NIXON_DR_FROM_CS) {
             load_debug_registers();
         }
 
         // TSS housekeeping
-        uint16 target_sel = static_cast<uint16>(nmi_command_test(NIXON_STOP) ? SEL_TSS_DBG : SEL_TSS_RUN);
+        uint16 target_sel = static_cast<uint16>((cs->command & NIXON_STOP) ? SEL_TSS_DBG : SEL_TSS_RUN);
         Tss::nmi.link = target_sel;
         Gdt::gdt[target_sel >> 3].busy_tss();
 

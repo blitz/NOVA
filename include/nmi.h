@@ -61,24 +61,14 @@ struct nmi_command_space {
       uint32 cr4;
       int32  tss_va;
 
+      // Include the instruction pointer here.
+      uint32 eip;
+
       /// Static fields. These are set by the stub and should not be changed.
 
       // Some kind of descriptive text to identify what kind of OS
       // this command space controls.
       char   description[16*4];
-
-      // A window of physical memory (sizes are in bytes). Set by the
-      // stub. The monitor interprets all memory references (except
-      // the TSS location) as relative to this window. If both values
-      // are 0, don't offset memory addresses.
-      int32  phys_offset; // Offset relative to start of CS
-      uint32 phys_size;
-
-      // The type of MSI sent by the monitor. See section 9.11.2
-      // "Message Data register format" for the complete
-      // explanation. The special value 0 means that the monitor
-      // should use NMIs. Using other values is untested.
-      uint32 int_vec;
 
       /// Fields that are written only by the monitor.
 
@@ -99,7 +89,7 @@ struct nmi_command_space {
       // 0. This can also be 1 in some circumstances. See dbg.S.
       uint32 checksum;
     };
-    uint32 word[19 + 16];
+    uint32 word[17 /* words data */ + 16 /* words description */];
   };
 };
 
