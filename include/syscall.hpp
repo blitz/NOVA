@@ -119,6 +119,23 @@ class Sys_create_sm : public Sys_regs
         inline mword cnt() const { return ARG_3; }
 };
 
+class Sys_create_vi : public Sys_regs
+{
+    public:
+        ALWAYS_INLINE
+        inline unsigned long sel() const { return ARG_1 >> 8; }
+
+        ALWAYS_INLINE
+        inline unsigned long pd() const { return ARG_2; }
+
+        ALWAYS_INLINE
+        inline unsigned long ec() const { return ARG_3; }
+
+        ALWAYS_INLINE
+        inline mword evt() const { return ARG_4; }
+};
+
+
 class Sys_revoke : public Sys_regs
 {
     public:
@@ -175,6 +192,16 @@ class Sys_sm_ctrl : public Sys_regs
 
         ALWAYS_INLINE
         inline unsigned zc() const { return flags() & 0x2; }
+};
+
+class Sys_vi_ctrl : public Sys_regs
+{
+    public:
+        ALWAYS_INLINE
+        inline unsigned long vi() const { return ARG_1 >> 8; }
+
+        ALWAYS_INLINE
+        inline unsigned op() const { return flags() & 0x1; }
 };
 
 class Sys_assign_pci : public Sys_regs

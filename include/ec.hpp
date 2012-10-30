@@ -205,6 +205,12 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
 
                 if (Cpu::id != cpu && Ec::remote (cpu) == this)
                     Lapic::send_ipi (cpu, VEC_IPI_RKE);
+
+                if (next == this) {
+                    // TODO: Sends a second IPI. Ugly.
+                    next = NULL;
+                    release();
+                }
             }
         }
 
@@ -215,6 +221,18 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
             Lock_guard <Spinlock> guard (lock);
 
             for (Sc *s; (s = dequeue()); s->remote_enqueue()) ;
+        }
+
+        ALWAYS_INLINE
+        inline void wait_event()
+        {
+            // XXX Hacky because Ec considers itself blocked, iff it
+            // is queued in a list. This can be beautified when
+            // semaphores are gone.
+            next = this;
+            // XXX Is this racy? But we are doing almost the same
+            // thing as the semaphore implementation.
+            block_sc();
         }
 
         HOT NORETURN
@@ -271,6 +289,9 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         static void sys_create_sm();
 
         NORETURN
+        static void sys_create_vi();
+
+        NORETURN
         static void sys_revoke();
 
         NORETURN
@@ -287,6 +308,9 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
 
         NORETURN
         static void sys_sm_ctrl();
+
+        NORETURN
+        static void sys_vi_ctrl();
 
         NORETURN
         static void sys_assign_pci();

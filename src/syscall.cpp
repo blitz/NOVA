@@ -30,6 +30,7 @@
 #include "syscall.hpp"
 #include "utcb.hpp"
 #include "vectors.hpp"
+#include "vi.hpp"
 
 template <Sys_regs::Status T>
 void Ec::sys_finish()
@@ -358,6 +359,43 @@ void Ec::sys_create_sm()
     sys_finish<Sys_regs::SUCCESS>();
 }
 
+void Ec::sys_create_vi()
+{
+    Sys_create_vi *r = static_cast<Sys_create_vi *>(current->sys_regs());
+
+    trace (TRACE_SYSCALL, "EC:%p SYS_CREATE VI:%#lx EC:%#lx EVT:%#lx", current, r->sel(), r->ec(), r->evt());
+
+    Capability cap = Space_obj::lookup (r->pd());
+    if (EXPECT_FALSE (cap.obj()->type() != Kobject::PD)
+        // XXX No such permission bit.
+        // or !(cap.prm() & 1UL << Kobject::VI)
+       ) {
+        trace (TRACE_ERROR, "%s: Non-PD CAP (%#lx)", __func__, r->pd());
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+    Pd *pd = static_cast<Pd *>(cap.obj());
+
+    cap = Space_obj::lookup (r->ec());
+    if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) ||
+        // We test for the ec_ctrl permission.
+        !(cap.prm() & 1UL << 0)) {
+        trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec());
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+    Ec *ec = static_cast<Ec *>(cap.obj());
+
+
+    Vi *vi = new Vi (pd, r->sel(), ec, r->evt());
+    if (!Space_obj::insert_root (vi)) {
+        trace (TRACE_ERROR, "%s: Non-NULL CAP (%#lx)", __func__, r->sel());
+        delete vi;
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+
+    sys_finish<Sys_regs::SUCCESS>();
+}
+
+
 void Ec::sys_revoke()
 {
     Sys_revoke *r = static_cast<Sys_revoke *>(current->sys_regs());
@@ -462,6 +500,35 @@ void Ec::sys_sm_ctrl()
     sys_finish<Sys_regs::SUCCESS>();
 }
 
+void Ec::sys_vi_ctrl()
+{
+    Sys_vi_ctrl *r = static_cast<Sys_vi_ctrl *>(current->sys_regs());
+
+    switch (r->op()) {
+
+       case 0:                  // Block
+          current->cont = sys_finish<Sys_regs::SUCCESS>;
+          current->wait_event();
+          break;
+
+       case 1: {                // Trigger
+
+          Capability cap = Space_obj::lookup (r->vi());
+          if (EXPECT_FALSE (cap.obj()->type() != Kobject::VI)) {
+             trace (TRACE_ERROR, "%s: Non-VI CAP (%#lx)", __func__, r->vi());
+             sys_finish<Sys_regs::BAD_CAP>();
+          }
+
+          Vi *vi = static_cast<Vi *>(cap.obj());
+
+          vi->trigger();
+          break;
+       }
+    }
+
+    sys_finish<Sys_regs::SUCCESS>();
+}
+
 void Ec::sys_assign_pci()
 {
     Sys_assign_pci *r = static_cast<Sys_assign_pci *>(current->sys_regs());
@@ -540,6 +607,8 @@ void (*const syscall[])() =
     &Ec::sys_sm_ctrl,
     &Ec::sys_assign_pci,
     &Ec::sys_assign_gsi,
+    &Ec::sys_create_vi,
+    &Ec::sys_vi_ctrl,
     &Ec::sys_finish<Sys_regs::BAD_HYP>,
 };
 

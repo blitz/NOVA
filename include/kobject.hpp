@@ -40,6 +40,7 @@ class Kobject : public Mdb
             SC,
             PT,
             SM,
+            VI,
             INVALID,
         };
 
