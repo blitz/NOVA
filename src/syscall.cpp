@@ -395,14 +395,7 @@ void Ec::sys_ec_ctrl()
     }
 
     Ec *ec = static_cast<Ec *>(cap.obj());
-
-    if (!(ec->regs.hazard() & HZD_RECALL)) {
-
-        ec->regs.set_hazard (HZD_RECALL);
-
-        if (Cpu::id != ec->cpu && Ec::remote (ec->cpu) == ec)
-            Lapic::send_ipi (ec->cpu, VEC_IPI_RKE);
-    }
+    ec->recall();
 
     sys_finish<Sys_regs::SUCCESS>();
 }

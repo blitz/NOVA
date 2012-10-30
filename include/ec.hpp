@@ -28,6 +28,8 @@
 #include "regs.hpp"
 #include "sc.hpp"
 #include "tss.hpp"
+#include "lapic.hpp"
+#include "vectors.hpp"
 
 class Utcb;
 
@@ -193,6 +195,19 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
 
             Sc::schedule (true);
         }
+
+        ALWAYS_INLINE
+        inline void recall()
+        {
+            if (!(regs.hazard() & HZD_RECALL)) {
+
+                regs.set_hazard (HZD_RECALL);
+
+                if (Cpu::id != cpu && Ec::remote (cpu) == this)
+                    Lapic::send_ipi (cpu, VEC_IPI_RKE);
+            }
+        }
+
 
         ALWAYS_INLINE
         inline void release()
