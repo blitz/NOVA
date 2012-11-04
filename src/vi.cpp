@@ -22,10 +22,11 @@
 INIT_PRIORITY (PRIO_SLAB)
 Slab_cache Vi::cache (sizeof (Vi), 32);
 
-Vi::Vi (Pd *own, mword sel, Ec *e, mword evt)
-  : Kobject (VI, static_cast<Space_obj *>(own), sel), ec (e), event (evt)
+Vi::Vi (Pd *own, mword sel, Ec *e_handler, Ec *e_recall, mword evt)
+  : Kobject (VI, static_cast<Space_obj *>(own), sel),
+    ec_handler (e_handler), ec_recall(e_recall), event (evt)
 {
-    trace (TRACE_SYSCALL, "VI:%p created (EC:%p EVT:%lu)", this, e, event);
+    assert(not ec_handler->is_vcpu());
 }
 
 // EOF

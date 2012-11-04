@@ -363,7 +363,8 @@ void Ec::sys_create_vi()
 {
     Sys_create_vi *r = static_cast<Sys_create_vi *>(current->sys_regs());
 
-    trace (TRACE_SYSCALL, "EC:%p SYS_CREATE VI:%#lx EC:%#lx EVT:%#lx", current, r->sel(), r->ec(), r->evt());
+    trace (TRACE_SYSCALL, "EC:%p SYS_CREATE VI:%#lx EC_H:%#lx EC_R:%#lx EVT:%#lx",
+           current, r->sel(), r->ec_handler(), r->ec_recall(), r->evt());
 
     Capability cap = Space_obj::lookup (r->pd());
     if (EXPECT_FALSE (cap.obj()->type() != Kobject::PD)
@@ -375,17 +376,30 @@ void Ec::sys_create_vi()
     }
     Pd *pd = static_cast<Pd *>(cap.obj());
 
-    cap = Space_obj::lookup (r->ec());
+    cap = Space_obj::lookup (r->ec_handler());
     if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) ||
         // We test for the ec_ctrl permission.
         !(cap.prm() & 1UL << 0)) {
-        trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec());
+        trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec_handler());
         sys_finish<Sys_regs::BAD_CAP>();
     }
-    Ec *ec = static_cast<Ec *>(cap.obj());
+    Ec *ec_handler = static_cast<Ec *>(cap.obj());
+    if (ec_handler->is_vcpu()) {
+        // User cannot pass a vcpu as handler.
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+
+    cap = Space_obj::lookup (r->ec_recall());
+    if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) ||
+        // We test for the ec_ctrl permission.
+        !(cap.prm() & 1UL << 0)) {
+        trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec_recall());
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+    Ec *ec_recall = static_cast<Ec *>(cap.obj());
 
 
-    Vi *vi = new Vi (pd, r->sel(), ec, r->evt());
+    Vi *vi = new Vi (pd, r->sel(), ec_handler, ec_recall, r->evt());
     if (!Space_obj::insert_root (vi)) {
         trace (TRACE_ERROR, "%s: Non-NULL CAP (%#lx)", __func__, r->sel());
         delete vi;
@@ -519,9 +533,9 @@ void Ec::sys_vi_ctrl()
              sys_finish<Sys_regs::BAD_CAP>();
           }
 
-          Vi *vi = static_cast<Vi *>(cap.obj());
+          // And Lisp supposedly has a lot of parentheses ...
+          (static_cast<Vi *>(cap.obj()))->trigger();
 
-          vi->trigger();
           break;
        }
     }

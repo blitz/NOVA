@@ -50,7 +50,7 @@ class Utcb_head
 
     public:
         Crd     xlt, del;
-        mword   tls;
+        mword   events;
 };
 
 class Utcb_data
@@ -105,6 +105,12 @@ class Utcb : public Utcb_head, private Utcb_data
 
         inline mword ui() const { return min (words / 1, ucnt()); }
         inline mword ti() const { return min (words / 2, tcnt()); }
+
+        ALWAYS_INLINE
+        inline void set_evt(mword e) { Atomic::set_mask (events, e); }
+
+        ALWAYS_INLINE
+        inline mword evt() const { return events; }
 
         ALWAYS_INLINE NONNULL
         inline void save (Utcb *dst)

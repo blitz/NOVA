@@ -26,15 +26,15 @@ class Vi : public Kobject
         static Slab_cache cache;
 
     public:
-        Refptr<Ec> const ec;
+        Refptr<Ec> const ec_handler;
+        Refptr<Ec> const ec_recall;
         mword            event;
 
-        Vi (Pd *, mword, Ec *, mword);
+        Vi (Pd *, mword, Ec *, Ec *, mword);
 
         void trigger ()
         {
-            // TODO Set event mask
-            ec->recall();
+            ec_handler->set_events(event, ec_recall);
         }
 
         ALWAYS_INLINE

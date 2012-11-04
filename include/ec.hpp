@@ -30,8 +30,7 @@
 #include "tss.hpp"
 #include "lapic.hpp"
 #include "vectors.hpp"
-
-class Utcb;
+#include "utcb.hpp"
 
 class Ec : public Kobject, public Refcount, public Queue<Sc>
 {
@@ -141,6 +140,9 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         Ec (Pd *, mword, Pd *, void (*)(), unsigned, unsigned, mword, mword);
 
         ALWAYS_INLINE
+        inline bool is_vcpu() { return not utcb; }
+
+        ALWAYS_INLINE
         inline void add_tsc_offset (uint64 tsc)
         {
             regs.add_tsc_offset (tsc);
@@ -205,12 +207,6 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
 
                 if (Cpu::id != cpu && Ec::remote (cpu) == this)
                     Lapic::send_ipi (cpu, VEC_IPI_RKE);
-
-                if (next == this) {
-                    // TODO: Sends a second IPI. Ugly.
-                    next = NULL;
-                    release();
-                }
             }
         }
 
@@ -224,15 +220,47 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         }
 
         ALWAYS_INLINE
+        inline void set_events(mword event, Ec *ec_recall)
+        {
+            assert(utcb);
+
+            utcb->set_evt(event);
+
+            {
+                Lock_guard <Spinlock> guard (lock);
+
+                // Blocked via wait_event?
+                if (next == this) {
+                    // Unblock ourselves and release SCs.
+                    next = NULL;
+                    for (Sc *s; (s = dequeue()); s->remote_enqueue()) ;
+
+                    return;
+                }
+            }
+
+            // We were not blocking, so we need to send a recall event.
+            if (utcb->evt()) ec_recall->recall();
+        }
+
+        ALWAYS_INLINE
         inline void wait_event()
         {
-            // XXX Hacky because Ec considers itself blocked, iff it
-            // is queued in a list. This can be beautified when
-            // semaphores are gone.
-            next = this;
-            // XXX Is this racy? But we are doing almost the same
-            // thing as the semaphore implementation.
-            block_sc();
+            {
+                Lock_guard <Spinlock> guard (lock);
+                assert(next == NULL);
+
+                // Don't sleep if events are pending.
+                if (utcb->evt()) return;
+
+                // XXX Hacky because Ec considers itself blocked, iff it
+                // is queued in a list. This can be beautified when
+                // semaphores are gone.
+                next = this;
+                enqueue (Sc::current);
+            }
+
+            Sc::schedule (true);
         }
 
         HOT NORETURN

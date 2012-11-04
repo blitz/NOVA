@@ -129,10 +129,13 @@ class Sys_create_vi : public Sys_regs
         inline unsigned long pd() const { return ARG_2; }
 
         ALWAYS_INLINE
-        inline unsigned long ec() const { return ARG_3; }
+        inline unsigned long ec_handler() const { return ARG_3; }
 
         ALWAYS_INLINE
-        inline mword evt() const { return ARG_4; }
+        inline unsigned long ec_recall() const { return ARG_4; }
+
+        ALWAYS_INLINE
+        inline mword evt() const { return ARG_5; }
 };
 
 
