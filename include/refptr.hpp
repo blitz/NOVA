@@ -59,12 +59,12 @@ class Refptr
         T * operator->() const  { return ptr; }
 
         ALWAYS_INLINE
-        inline Refptr (T *p) : ptr (p->add_ref() ? p : nullptr) {}
+        inline Refptr (T *p) : ptr ((p and p->add_ref()) ? p : nullptr) {}
 
         ALWAYS_INLINE
         inline ~Refptr()
         {
-            if (ptr->del_ref())
+            if (ptr and ptr->del_ref())
                 delete ptr;
         }
 };
