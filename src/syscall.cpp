@@ -385,7 +385,7 @@ void Ec::sys_create_vi()
     Pd *pd = static_cast<Pd *>(cap.obj());
 
     cap = Space_obj::lookup (r->ec_handler());
-    if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) ||
+    if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) or
         // We test for the ec_ctrl permission.
         !(cap.prm() & 1UL << 0)) {
         trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec_handler());
@@ -397,15 +397,18 @@ void Ec::sys_create_vi()
         sys_finish<Sys_regs::BAD_CAP>();
     }
 
-    cap = Space_obj::lookup (r->ec_recall());
-    if (EXPECT_FALSE (cap.obj()->type() != Kobject::EC) ||
-        // We test for the ec_ctrl permission.
-        !(cap.prm() & 1UL << 0)) {
-        trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec_recall());
-        sys_finish<Sys_regs::BAD_CAP>();
+    // Recall EC is optional.
+    Ec *ec_recall = nullptr;
+    if (r->ec_recall()) {
+        cap = Space_obj::lookup (r->ec_recall());
+        if ((cap.obj()->type() != Kobject::EC) or
+            // We test for the ec_ctrl permission.
+            !(cap.prm() & 1UL << 0)) {
+            trace (TRACE_ERROR, "%s: Non-EC CAP (%#lx)", __func__, r->ec_recall());
+            sys_finish<Sys_regs::BAD_CAP>();
+        }
+        ec_recall = static_cast<Ec *>(cap.obj());
     }
-    Ec *ec_recall = static_cast<Ec *>(cap.obj());
-
 
     Vi *vi = new Vi (pd, r->sel(), ec_handler, ec_recall, r->evt());
     if (!Space_obj::insert_root (vi)) {

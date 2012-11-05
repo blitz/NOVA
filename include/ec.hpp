@@ -244,7 +244,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
             }
 
             // We were not blocking, so we need to send a recall event.
-            if (utcb->evt()) ec_recall->recall();
+            if (ec_recall and utcb->evt()) ec_recall->recall();
         }
 
         NORETURN
