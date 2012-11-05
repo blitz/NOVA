@@ -68,7 +68,7 @@ class Sys_create_ec : public Sys_regs
         inline mword esp() const { return ARG_4; }
 
         ALWAYS_INLINE
-        inline unsigned evt() const { return static_cast<unsigned>(ARG_5); }
+        inline unsigned exc_base() const { return static_cast<unsigned>(ARG_5); }
 };
 
 class Sys_create_sc : public Sys_regs

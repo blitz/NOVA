@@ -53,7 +53,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
             };
             uint32  xcpu;
         };
-        unsigned const evt;
+        unsigned const exc_base;
 
         static Slab_cache cache;
 

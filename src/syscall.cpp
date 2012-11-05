@@ -79,7 +79,7 @@ void Ec::send_msg()
 {
     Exc_regs *r = &current->regs;
 
-    Kobject *obj = Space_obj::lookup (current->evt + r->dst_portal).obj();
+    Kobject *obj = Space_obj::lookup (current->exc_base + r->dst_portal).obj();
     if (EXPECT_FALSE (obj->type() != Kobject::PT))
         die ("PT not found");
 
@@ -227,7 +227,7 @@ void Ec::sys_create_ec()
 {
     Sys_create_ec *r = static_cast<Sys_create_ec *>(current->sys_regs());
 
-    trace (TRACE_SYSCALL, "EC:%p SYS_CREATE EC:%#lx CPU:%#x UTCB:%#lx ESP:%#lx EVT:%#x", current, r->sel(), r->cpu(), r->utcb(), r->esp(), r->evt());
+    trace (TRACE_SYSCALL, "EC:%p SYS_CREATE EC:%#lx CPU:%#x UTCB:%#lx ESP:%#lx EXC_BASE:%#x", current, r->sel(), r->cpu(), r->utcb(), r->esp(), r->exc_base());
 
     if (EXPECT_FALSE (!Hip::cpu_online (r->cpu()))) {
         trace (TRACE_ERROR, "%s: Invalid CPU (%#x)", __func__, r->cpu());
@@ -251,7 +251,7 @@ void Ec::sys_create_ec()
         sys_finish<Sys_regs::BAD_PAR>();
     }
 
-    Ec *ec = new Ec (Pd::current, r->sel(), pd, r->flags() & 1 ? static_cast<void (*)()>(send_msg<ret_user_iret>) : nullptr, r->cpu(), r->evt(), r->utcb(), r->esp());
+    Ec *ec = new Ec (Pd::current, r->sel(), pd, r->flags() & 1 ? static_cast<void (*)()>(send_msg<ret_user_iret>) : nullptr, r->cpu(), r->exc_base(), r->utcb(), r->esp());
 
     if (!Space_obj::insert_root (ec)) {
         trace (TRACE_ERROR, "%s: Non-NULL CAP (%#lx)", __func__, r->sel());
