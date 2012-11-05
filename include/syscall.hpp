@@ -205,6 +205,9 @@ class Sys_vi_ctrl : public Sys_regs
 
         ALWAYS_INLINE
         inline unsigned op() const { return flags() & 0x1; }
+
+        ALWAYS_INLINE
+        inline mword mask() const { return ARG_2; }
 };
 
 class Sys_assign_pci : public Sys_regs

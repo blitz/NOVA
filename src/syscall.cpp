@@ -39,6 +39,14 @@ void Ec::sys_finish()
     ret_user_sysexit();
 }
 
+void Ec::cont_wait_event()
+{
+    if (current->wait_event())
+        Sc::schedule (true);
+    else
+        sys_finish<Sys_regs::SUCCESS>();
+}
+
 void Ec::activate()
 {
     Ec *ec = this;
@@ -521,22 +529,23 @@ void Ec::sys_vi_ctrl()
     switch (r->op()) {
 
        case 0:                  // Block
-          current->cont = sys_finish<Sys_regs::SUCCESS>;
-          current->wait_event();
-          break;
+           current->evt_mask = r->mask();
+           current->cont = cont_wait_event;
 
+           cont_wait_event();
+           break;
        case 1: {                // Trigger
 
-          Capability cap = Space_obj::lookup (r->vi());
-          if (EXPECT_FALSE (cap.obj()->type() != Kobject::VI)) {
-             trace (TRACE_ERROR, "%s: Non-VI CAP (%#lx)", __func__, r->vi());
-             sys_finish<Sys_regs::BAD_CAP>();
-          }
+           Capability cap = Space_obj::lookup (r->vi());
+           if (EXPECT_FALSE (cap.obj()->type() != Kobject::VI)) {
+               trace (TRACE_ERROR, "%s: Non-VI CAP (%#lx)", __func__, r->vi());
+               sys_finish<Sys_regs::BAD_CAP>();
+           }
 
-          // And Lisp supposedly has a lot of parentheses ...
-          (static_cast<Vi *>(cap.obj()))->trigger();
+           // And Lisp supposedly has a lot of parentheses ...
+           (static_cast<Vi *>(cap.obj()))->trigger();
 
-          break;
+           break;
        }
     }
 

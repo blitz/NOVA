@@ -54,6 +54,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
             uint32  xcpu;
         };
         unsigned const exc_base;
+        mword          evt_mask;
 
         static Slab_cache cache;
 
@@ -224,7 +225,10 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         {
             assert(utcb);
 
-            utcb->set_evt(event);
+            mword evt = utcb->set_evt(event);
+            if (not evt) return;
+
+            // At least one bit was flipped to one.
 
             {
                 Lock_guard <Spinlock> guard (lock);
@@ -232,7 +236,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
                 // Blocked via wait_event?
                 if (next == this) {
                     // Unblock ourselves and release SCs.
-                    next = NULL;
+                    next = nullptr;
                     for (Sc *s; (s = dequeue()); s->remote_enqueue()) ;
 
                     return;
@@ -243,15 +247,18 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
             if (utcb->evt()) ec_recall->recall();
         }
 
+        NORETURN
+        static void cont_wait_event();
+
         ALWAYS_INLINE
-        inline void wait_event()
+        inline bool wait_event()
         {
             {
                 Lock_guard <Spinlock> guard (lock);
                 assert(next == NULL);
 
                 // Don't sleep if events are pending.
-                if (utcb->evt()) return;
+                if (utcb->evt() & evt_mask) return false;
 
                 // XXX Hacky because Ec considers itself blocked, iff it
                 // is queued in a list. This can be beautified when
@@ -260,7 +267,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
                 enqueue (Sc::current);
             }
 
-            Sc::schedule (true);
+            return true;
         }
 
         HOT NORETURN

@@ -41,6 +41,10 @@ class Atomic
 
         template <typename T>
         ALWAYS_INLINE
+        static inline T fetch_and_set_mask (T &ptr, T v) { return __sync_fetch_and_or (&ptr, v); }
+
+        template <typename T>
+        ALWAYS_INLINE
         static inline void clr_mask (T &ptr, T v) { __sync_and_and_fetch (&ptr, ~v); }
 
         template <typename T>

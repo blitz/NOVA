@@ -106,8 +106,9 @@ class Utcb : public Utcb_head, private Utcb_data
         inline mword ui() const { return min (words / 1, ucnt()); }
         inline mword ti() const { return min (words / 2, tcnt()); }
 
+        // Returns bits that were flipped to 1 by this call.
         ALWAYS_INLINE
-        inline void set_evt(mword e) { Atomic::set_mask (events, e); }
+        inline mword set_evt(mword e) { return e & ~Atomic::fetch_and_set_mask (events, e); }
 
         ALWAYS_INLINE
         inline mword evt() const { return events; }
