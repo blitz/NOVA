@@ -1,5 +1,5 @@
 /*
- * Semaphore
+ * Virtual IRQ (VI)
  *
  * Copyright (C) 2012 Julian Stecklina <jsteckli@os.inf.tu-dresden.de>
  * Economic rights: Technische Universitaet Dresden (Germany)
